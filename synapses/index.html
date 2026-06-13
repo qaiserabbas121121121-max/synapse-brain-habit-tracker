@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synapses — Brain & Habit Visualizer</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="glow-orb glow-orb--1" aria-hidden="true"></div>
+  <div class="glow-orb glow-orb--2" aria-hidden="true"></div>
+
+  <header class="header">
+    <div class="header__brand">
+      <span class="header__logo">◈</span>
+      <div>
+        <h1 class="header__title">Synapses</h1>
+        <p class="header__tagline">Neural habit mapping</p>
+      </div>
+    </div>
+    <div class="header__stats">
+      <div class="header__stat">
+        <span class="header__stat-value" id="total-logs">0</span>
+        <span class="header__stat-label">Logs</span>
+      </div>
+      <div class="header__stat">
+        <span class="header__stat-value" id="current-streak">0</span>
+        <span class="header__stat-label">Day streak</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="app">
+    <section class="panel panel--dashboard" aria-labelledby="dashboard-heading">
+      <div class="panel__header">
+        <h2 id="dashboard-heading">Habit Logger</h2>
+        <p class="panel__subtitle">Log a habit to illuminate its neural footprint</p>
+      </div>
+
+      <div class="habit-grid" id="habit-grid" role="group" aria-label="Select a habit"></div>
+
+      <form class="log-form" id="log-form">
+        <label class="log-form__label" for="custom-habit">Or log a custom habit</label>
+        <div class="log-form__row">
+          <input
+            type="text"
+            id="custom-habit"
+            class="log-form__input"
+            placeholder="e.g. Journaling, Sleep 8hrs..."
+            maxlength="40"
+          >
+          <button type="submit" class="btn btn--primary">Log today</button>
+        </div>
+      </form>
+
+      <div class="streak-card">
+        <div class="streak-card__header">
+          <h3>Activity tracker</h3>
+          <button type="button" class="btn btn--ghost btn--sm" id="clear-data">Clear data</button>
+        </div>
+        <ul class="log-list" id="log-list" aria-live="polite">
+          <li class="log-list__empty">No habits logged yet. Select one above to begin.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="panel panel--brain" aria-labelledby="brain-heading">
+      <div class="panel__header panel__header--center">
+        <h2 id="brain-heading">Interactive Brain Map</h2>
+        <p class="panel__subtitle" id="brain-status">Select or log a habit to activate regions</p>
+      </div>
+
+      <div class="brain-container">
+        <svg class="brain-svg" viewBox="0 0 400 420" role="img" aria-label="Brain diagram with four key regions">
+          <defs>
+            <filter id="glow-positive" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <filter id="glow-negative" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="8" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <linearGradient id="brain-fill" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#1a1f35"/>
+              <stop offset="100%" stop-color="#12152a"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Brain outline -->
+          <path class="brain-outline" d="M200,30 C120,30 55,85 45,165 C35,245 70,330 130,375 C160,395 200,400 240,375 C300,330 365,245 355,165 C345,85 280,30 200,30 Z" fill="url(#brain-fill)" stroke="rgba(100,180,255,0.25)" stroke-width="1.5"/>
+
+          <!-- Corpus / midline -->
+          <path class="brain-midline" d="M200,55 L200,360" stroke="rgba(100,180,255,0.12)" stroke-width="1" stroke-dasharray="4 6"/>
+
+          <!-- Prefrontal Cortex -->
+          <path
+            id="region-prefrontal"
+            class="brain-region"
+            data-region="prefrontal"
+            d="M200,55 C145,58 95,95 80,155 C75,185 85,210 110,225 C140,240 175,235 200,220 C225,235 260,240 290,225 C315,210 325,185 320,155 C305,95 255,58 200,55 Z"
+          />
+          <text class="region-label" x="200" y="145" text-anchor="middle">Prefrontal Cortex</text>
+
+          <!-- Hippocampus (medial temporal, bilateral) -->
+          <ellipse
+            id="region-hippocampus-l"
+            class="brain-region"
+            data-region="hippocampus"
+            cx="130" cy="280" rx="38" ry="22"
+          />
+          <ellipse
+            id="region-hippocampus-r"
+            class="brain-region"
+            data-region="hippocampus"
+            cx="270" cy="280" rx="38" ry="22"
+          />
+          <text class="region-label" x="200" y="318" text-anchor="middle">Hippocampus</text>
+
+          <!-- Amygdala (deep temporal) -->
+          <circle
+            id="region-amygdala-l"
+            class="brain-region"
+            data-region="amygdala"
+            cx="115" cy="240" r="22"
+          />
+          <circle
+            id="region-amygdala-r"
+            class="brain-region"
+            data-region="amygdala"
+            cx="285" cy="240" r="22"
+          />
+          <text class="region-label" x="200" y="255" text-anchor="middle">Amygdala</text>
+
+          <!-- Striatum (basal ganglia) -->
+          <ellipse
+            id="region-striatum-l"
+            class="brain-region"
+            data-region="striatum"
+            cx="155" cy="195" rx="28" ry="18"
+          />
+          <ellipse
+            id="region-striatum-r"
+            class="brain-region"
+            data-region="striatum"
+            cx="245" cy="195" rx="28" ry="18"
+          />
+          <text class="region-label" x="200" y="200" text-anchor="middle">Striatum</text>
+
+          <!-- Synapse nodes (decorative) -->
+          <g class="synapse-nodes" opacity="0.4">
+            <circle cx="170" cy="120" r="2" fill="#64b5ff"/>
+            <circle cx="230" cy="115" r="2" fill="#64b5ff"/>
+            <circle cx="150" cy="190" r="2" fill="#a78bfa"/>
+            <circle cx="250" cy="190" r="2" fill="#a78bfa"/>
+            <circle cx="130" cy="270" r="2" fill="#4ade80"/>
+            <circle cx="270" cy="270" r="2" fill="#4ade80"/>
+          </g>
+        </svg>
+
+        <div class="brain-legend">
+          <span class="legend-item legend-item--positive"><span class="legend-dot"></span> Strengthening</span>
+          <span class="legend-item legend-item--calming"><span class="legend-dot"></span> Calming</span>
+          <span class="legend-item legend-item--negative"><span class="legend-dot"></span> Dysregulation</span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel panel--science" aria-labelledby="science-heading">
+      <div class="panel__header">
+        <h2 id="science-heading">Neuroplasticity &amp; Science</h2>
+        <p class="panel__subtitle">How your habit reshapes the brain</p>
+      </div>
+
+      <div class="science-content" id="science-content">
+        <div class="science-placeholder">
+          <div class="science-placeholder__icon">🧠</div>
+          <h3>Awaiting neural input</h3>
+          <p>Choose or log a habit to reveal how it influences neurotransmitters, synaptic strength, and regional brain activity.</p>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <p>Synapses &mdash; Educational visualization. Not medical advice.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
